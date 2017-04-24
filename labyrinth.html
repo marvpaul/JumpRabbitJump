@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<head>
+    <style>
+        #guy{
+            position: absolute;
+        }
+        .map{
+            background: black;
+            position: absolute;
+            margin: 0px;
+        }
+        .way{
+            position: absolute;
+        }
+        body{
+            margin: 0px;
+        }
+        .carot{
+            position: absolute;
+        }
+        .way_pattern{
+            position: absolute;
+        }
+        #score{
+            position: absolute;
+            font-size: 400%;
+            margin-left: 95%;
+            z-index: 4;
+        }
+    </style>
+</head>
+<body>
+    <div id="wrapper"></div>
+        <div id="score">0</div>
+        <div id="guy">
+        </div>
+    <script type="text/javascript">
+    document.getElementById("guy").style.marginLeft = "0px";
+    document.getElementById("guy").style.marginTop = "0px";
+    /*spielfeld = [["-","-","-","-","X","X","X","X","X","X","X","X","X","X","X","X","X","X","X","X"],
+                ["X","X","-","X","-","X","X","X","X","X","X","X","X","X","X","X","X","X","X","X"],
+                ["-","-","-","X","X","X","X","X","-","X","X","X","X","X","X","X","X","X","X","X"],
+                ["-","-","-","X","X","X","X","X","X","X","X","X","X","X","X","X","X","X","X","X"],
+                ["-","-","-","-","-","-","-","X","X","X","X","X","X","X","X","X","X","X","X","X"],
+                ["-","-","-","X","X","X","-","X","X","X","X","X","X","X","X","X","X","X","X","X"],
+                ["-","-","X","X","X","X","-","X","X","X","X","X","X","X","X","X","X","X","X","X"],
+                ["-","-","X","X","X","X","-","X","X","X","X","X","X","X","X","X","X","X","X","X"],
+                ["X","-","X","X","-","X","-","-","-","-","X","X","X","X","X","X","X","X","X","X"],
+                ["-","-","X","X","X","X","X","X","-","-","X","X","X","X","X","X","X","X","X","X"],
+                ["-","-","X","X","X","X","X","X","X","-","-","-","-","-","-","-","-","-","X","X"],
+                ["-","-","X","X","X","X","X","X","X","X","X","X","X","X","X","X","X","-","X","X"],
+                ["-","X","X","X","X","X","X","X","X","X","X","X","X","X","X","X","X","-","-","-"]]*/
+    spielfeld=[["-","-","-","-","X","X","X","X","X","X"],
+               ["X","X","-","X","-","X","X","X","X","X"],
+               ["-","-","-","-","X","X","X","X","X","X"],
+               ["X","X","-","X","-","X","X","X","X","X"],
+               ["-","-","-","-","X","X","X","X","X","X"],
+               ["-","-","-","-","X","X","X","X","X","X"],
+               ["X","X","-","X","-","X","X","X","X","X"]
+              ]
+    height = window.innerHeight;
+    width = window.innerWidth;
+    horizontal_steps = Math.round(width / spielfeld[0].length);
+    vertical_steps = Math.round(height / spielfeld.length);
+    document.getElementById("guy").innerHTML = '<img src="./img/rabbit.gif"' + 'width="'+horizontal_steps+'" height="' + vertical_steps + '">';
+    document.getElementById("guy").style.width = horizontal_steps + "px";                 
+    document.getElementById("guy").style.height = vertical_steps + "px";
+    drawmap();
+        document.onkeydown = function(event) {
+          if (event.keyCode == 39) {
+            event.cancelBubble = true;
+            event.returnValue = false;
+            go("right");
+          }  
+          if (event.keyCode == 37) {
+            event.cancelBubble = true;
+            event.returnValue = false;
+            go("left");
+          }
+          if (event.keyCode == 38) {
+            event.cancelBubble = true;
+            event.returnValue = false;
+            go("up");
+          }
+          if (event.keyCode == 40) {
+            event.cancelBubble = true;
+            event.returnValue = false;
+            go("down");
+          }
+          return event.returnValue;
+        }
+        window.ondeviceorientation = function(event) {
+          alpha = Math.round(event.alpha);
+          beta = Math.round(event.beta); //Vor- und Zurückneigen, bis 180 / -180°
+          gamma = Math.round(event.gamma); //Seitliches Neigen, bis 90 / -90°
+          if(beta > 30){
+              go("down");
+          }
+          else if(beta < -30){
+              go("up");
+          }
+          if(gamma > 15){
+              go("right");
+          }
+          else if(gamma < -15){
+              go("left");
+          }
+          sleepFor(500);
+        }
+        function go(step){
+            mleft = parseInt(document.getElementById("guy").style.marginLeft);
+            mtop = parseInt(document.getElementById("guy").style.marginTop);
+            if(step == "right"){ 
+                    mnew = mleft+horizontal_steps;
+                    if(checkvalidations("right")){
+                        document.getElementById("guy").style.marginLeft = mnew + "px";
+                    }
+                    else{
+                        alert("bewegung nicht möglich");
+                    }
+            }
+            else if(step == "left"){
+                if(checkvalidations("left")){
+                    mnew = mleft - horizontal_steps;
+                    document.getElementById("guy").style.marginLeft = mnew + "px";
+                }
+                else{
+                    alert("bewegung nicht möglich");
+                }
+            }
+            else if(step == "down"){
+                    mnew = mtop+vertical_steps;
+                    if(checkvalidations("down")){
+                        document.getElementById("guy").style.marginTop = mnew + "px";
+                    }
+                    else{
+                        alert("bewegung nicht möglich");
+                    }
+            }
+            else if(step == "up"){
+                if(checkvalidations("up")){
+                    mnew = mtop-vertical_steps;
+                    document.getElementById("guy").style.marginTop = mnew + "px";
+                }
+                else{
+                    alert("Bewegung nicht möglich");
+                }
+            }
+        }
+        function checkvalidations(oriantation){
+            horizontal = Math.round(mleft / horizontal_steps);
+            vertical = (mtop);
+            if(vertical != 0){
+                vertical = Math.round(vertical / vertical_steps);
+            }
+            if(oriantation == "right"){
+                if(spielfeld[vertical][horizontal+1] == "-"){
+                    eatcarot(vertical, horizontal+1);
+                    return true;
+                }
+                return false;
+            }
+            if(oriantation == "left"){
+                if(spielfeld[vertical][horizontal-1] == "-"){
+                    eatcarot(vertical, horizontal-1);
+                    return true;
+                }
+                return false;
+            }
+            else if(oriantation == "down"){
+                if(spielfeld[vertical+1][horizontal] == "-"){
+                    eatcarot(vertical+1, horizontal);
+                    return true;
+                }
+                return false;
+            }
+            else if(oriantation == "up"){
+                if(spielfeld[vertical-1][horizontal] == "-"){
+                    eatcarot(vertical-1, horizontal);
+                    return true;
+                }
+                return false;
+            }
+        }
+        function drawmap(){
+          for (var v = 0; v < spielfeld.length; v++) {
+            for (var h = 0; h < spielfeld[v].length; h++) {
+              if(spielfeld[v][h] == "X"){
+                  document.getElementById("wrapper").innerHTML += "<div class='map' id='"+v+ " " +h+"'></div>";
+                  document.getElementById(v + " "+ h).style.width = horizontal_steps + "px";
+                  document.getElementById(v + " "+ h).style.height = vertical_steps + "px";
+                  document.getElementById(v + " "+ h).style.marginLeft = horizontal_steps * (h) + "px";
+                  document.getElementById(v + " "+ h).style.marginTop = vertical_steps * (v) + "px"; 
+                  document.getElementById(v + " "+ h).innerHTML = '<img src="./img/grass.jpg" width="'+horizontal_steps+'" height="' + vertical_steps + '">';
+              }
+              else{
+                  document.getElementById("wrapper").innerHTML += "<div class='way' id='"+v+ " " +h+"'></div>";
+                  document.getElementById(v + " "+ h).style.width = horizontal_steps + "px";
+                  document.getElementById(v + " "+ h).style.height = vertical_steps + "px";
+                  document.getElementById(v + " "+ h).style.marginLeft = horizontal_steps * (h) + "px";
+                  document.getElementById(v + " "+ h).style.marginTop = vertical_steps * (v) + "px"; 
+                  document.getElementById(v + " "+ h).innerHTML = '<img src="./img/all.jpg" class="way_pattern" width="'+horizontal_steps+'" height="' + vertical_steps + '">  <img src="./img/carot.gif" class="carot" id="carot' + v + ' ' + h + '"width="'+horizontal_steps+'" height="' + vertical_steps + '">';
+              }
+            };
+          };
+                }
+        function eatcarot(v, h){
+            if(document.getElementById("carot" + v + " " + h).style.visibility != "hidden"){
+                document.getElementById("score").innerHTML = parseInt(document.getElementById("score").innerHTML) + 1;  
+            }
+            document.getElementById("carot" + v + " " + h).style.visibility = "hidden";
+
+        }
+        function sleepFor( sleepDuration ){
+            var now = new Date().getTime();
+            while(new Date().getTime() < now + sleepDuration){ /* do nothing */ } 
+        }
+    </script>
+</body>
